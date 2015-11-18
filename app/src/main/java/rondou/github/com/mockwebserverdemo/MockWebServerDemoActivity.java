@@ -5,8 +5,15 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.squareup.okhttp.mockwebserver.Dispatcher;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.squareup.okhttp.mockwebserver.RecordedRequest;
+
 
 public class MockWebServerDemoActivity extends ActionBarActivity {
+
+    private MockWebServer mServer = new MockWebServer();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
