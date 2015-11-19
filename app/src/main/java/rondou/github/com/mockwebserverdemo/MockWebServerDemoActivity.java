@@ -4,21 +4,70 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 
 import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 import com.squareup.okhttp.mockwebserver.RecordedRequest;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MockWebServerDemoActivity extends ActionBarActivity {
 
     private MockWebServer mServer = new MockWebServer();
+    private Button mMockStartButton;
+    private Button mConnectTestButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mock_web_server_demo);
+
+        final Dispatcher dispatcher = new Dispatcher() {
+
+            @Override
+            public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
+
+                if (request.getPath().equals("/hellomockserver")){
+                    return new MockResponse().setResponseCode(200).setBody("hellomockserver");
+                }
+                return new MockResponse().setResponseCode(404);
+            }
+        };
+
+        mMockStartButton = (Button)findViewById(R.id.mockserverbutton);
+        mMockStartButton.setOnClickListener(new Button.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                mServer = new MockWebServer();
+                mServer.setDispatcher(dispatcher);
+                try {
+                    mServer.start();
+                } catch (Exception e) {
+
+                }
+            }
+
+        });
+
+        mConnectTestButton = (Button)findViewById(R.id.connectTestbutton);
+        mConnectTestButton.setOnClickListener(new Button.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                connection_test();
+            }
+        });
+
     }
 
 
@@ -42,5 +91,33 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void connection_test() {
+        HttpURLConnection urlConnection = null;
+        URL url = mServer.getUrl("/hellomockserver");
+
+        String result = null;
+        try {
+            urlConnection = (HttpURLConnection) url.openConnection();
+
+            InputStream in = urlConnection.getInputStream();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            StringBuilder out = new StringBuilder();
+
+            String line = null;
+
+            while ((line = reader.readLine()) != null) {
+                out.append(line);
+            }
+
+            result = out.toString();
+
+        } catch (IOException e){
+            e.printStackTrace();
+        } finally {
+            if (urlConnection != null) urlConnection.disconnect();
+        }
     }
 }
