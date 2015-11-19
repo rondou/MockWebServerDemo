@@ -2,10 +2,13 @@ package rondou.github.com.mockwebserverdemo;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.AsyncTask;
+import android.os.StrictMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.util.Log;
 
 import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
@@ -21,7 +24,7 @@ import java.net.URL;
 
 public class MockWebServerDemoActivity extends ActionBarActivity {
 
-    private MockWebServer mServer = new MockWebServer();
+    //private MockWebServer mServer = new MockWebServer();
     private Button mMockStartButton;
     private Button mConnectTestButton;
 
@@ -30,7 +33,21 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mock_web_server_demo);
 
-        final Dispatcher dispatcher = new Dispatcher() {
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                .detectDiskReads()
+                .detectDiskWrites()
+                .detectAll()
+                .penaltyLog()
+                .penaltyDeath()
+                .build());
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .penaltyLog()
+                .penaltyDeath()
+                .build());
+
+        /*final Dispatcher dispatcher = new Dispatcher() {
 
             @Override
             public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
@@ -41,19 +58,26 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
                 return new MockResponse().setResponseCode(404);
             }
         };
+        mServer.setDispatcher(dispatcher);*/
 
+        /*mServer.enqueue(new MockResponse().setBody("hello, world!"));
+        mServer.enqueue(new MockResponse().setBody("sup, bra?"));
+        mServer.enqueue(new MockResponse().setBody("yo dog"));
+        try {
+            mServer.start();
+        } catch (Throwable e) {
+            Log.d("onCreate", "ccc");
+        }*/
         mMockStartButton = (Button)findViewById(R.id.mockserverbutton);
         mMockStartButton.setOnClickListener(new Button.OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
-                mServer = new MockWebServer();
-                mServer.setDispatcher(dispatcher);
                 try {
-                    mServer.start();
-                } catch (Exception e) {
-
+                    new TestHttpsRequest().execute();
+                } catch (Throwable e) {
+                    Log.d("MockWebServerDemo", "TestHttpsRequestException");
                 }
             }
 
@@ -61,14 +85,34 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
 
         mConnectTestButton = (Button)findViewById(R.id.connectTestbutton);
         mConnectTestButton.setOnClickListener(new Button.OnClickListener() {
-
             @Override
             public void onClick(View v) {
-                connection_test();
             }
         });
 
     }
+
+    private class TestHttpsRequest extends AsyncTask<Void, Void, Void> {
+        @Override protected Void doInBackground(Void... params) {
+            try {
+                startWebServer();
+            } catch (Exception e) {
+                Log.d("MockWebServerDemo", "startWebServerException");
+                //throw new AssertionError(e);
+            }
+            return null;
+        }
+
+    }
+
+    private void startWebServer() throws Exception {
+        MockWebServer server = new MockWebServer();
+        server.enqueue(new MockResponse().setBody("hello, mockserver!"));
+        server.enqueue(new MockResponse().setBody("sup, bra?"));
+        server.enqueue(new MockResponse().setBody("yo tung"));
+        server.start();
+    }
+
 
 
     @Override
@@ -93,31 +137,6 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void connection_test() {
-        HttpURLConnection urlConnection = null;
-        URL url = mServer.getUrl("/hellomockserver");
-
-        String result = null;
-        try {
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            InputStream in = urlConnection.getInputStream();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            StringBuilder out = new StringBuilder();
-
-            String line = null;
-
-            while ((line = reader.readLine()) != null) {
-                out.append(line);
-            }
-
-            result = out.toString();
-
-        } catch (IOException e){
-            e.printStackTrace();
-        } finally {
-            if (urlConnection != null) urlConnection.disconnect();
-        }
+    public void connectionTest() {
     }
 }
