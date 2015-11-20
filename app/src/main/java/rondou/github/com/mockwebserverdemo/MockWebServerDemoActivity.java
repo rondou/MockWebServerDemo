@@ -3,14 +3,12 @@ package rondou.github.com.mockwebserverdemo;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.os.AsyncTask;
-import android.os.StrictMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.util.Log;
 
-import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
@@ -25,30 +23,15 @@ import java.net.URL;
 
 public class MockWebServerDemoActivity extends ActionBarActivity {
 
-    //private MockWebServer mServer = new MockWebServer();
+    private MockWebServer mServer = new MockWebServer();
     private Button mMockStartButton;
-    private Button mConnectTestButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mock_web_server_demo);
 
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                .detectDiskReads()
-                .detectDiskWrites()
-                .detectAll()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .detectLeakedClosableObjects()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
-
-        /*final Dispatcher dispatcher = new Dispatcher() {
+        final Dispatcher dispatcher = new Dispatcher() {
 
             @Override
             public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
@@ -59,16 +42,8 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
                 return new MockResponse().setResponseCode(404);
             }
         };
-        mServer.setDispatcher(dispatcher);*/
+        mServer.setDispatcher(dispatcher);
 
-        /*mServer.enqueue(new MockResponse().setBody("hello, world!"));
-        mServer.enqueue(new MockResponse().setBody("sup, bra?"));
-        mServer.enqueue(new MockResponse().setBody("yo dog"));
-        try {
-            mServer.start();
-        } catch (Throwable e) {
-            Log.d("onCreate", "ccc");
-        }*/
         mMockStartButton = (Button)findViewById(R.id.mockserverbutton);
         mMockStartButton.setOnClickListener(new Button.OnClickListener() {
 
@@ -83,14 +58,6 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
             }
 
         });
-
-        mConnectTestButton = (Button)findViewById(R.id.connectTestbutton);
-        mConnectTestButton.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            }
-        });
-
     }
 
     private class TestHttpsRequest extends AsyncTask<Void, Void, Void> {
@@ -107,11 +74,8 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
     }
 
     private void startWebServer() throws Exception {
-        MockWebServer server = new MockWebServer();
-        server.enqueue(new MockResponse().setBody("hello, mockserver!"));
-        server.enqueue(new MockResponse().setBody("sup, bra?"));
-        server.enqueue(new MockResponse().setBody("yo tung"));
-        server.start();
+        mServer.start();
+        connectionTest();
     }
 
 
@@ -139,5 +103,31 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
     }
 
     public void connectionTest() {
+        HttpURLConnection urlConnection = null;
+        URL url = mServer.getUrl("/hellomockserver");
+        String result = null;
+        try {
+
+            urlConnection = (HttpURLConnection) url.openConnection();
+
+            InputStream in = urlConnection.getInputStream();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            StringBuilder out = new StringBuilder();
+
+            String line = null;
+
+            while ((line = reader.readLine()) != null) {
+                out.append(line);
+            }
+
+            result = out.toString();
+
+        } catch (IOException e){
+            e.printStackTrace();
+        } finally {
+            if (urlConnection != null) urlConnection.disconnect();
+        }
+        Log.d("MockWebServerDemo", "testConnectresult = " + result);
     }
 }
