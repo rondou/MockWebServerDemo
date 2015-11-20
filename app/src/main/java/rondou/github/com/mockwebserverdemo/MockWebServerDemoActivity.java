@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.util.Log;
 
+import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.mockwebserver.Dispatcher;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
@@ -77,7 +78,7 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
                 try {
                     new TestHttpsRequest().execute();
                 } catch (Throwable e) {
-                    Log.d("MockWebServerDemo", "TestHttpsRequestException");
+                    Log.d("MockWebServerDemo", "TestHttpsRequestException = " + e);
                 }
             }
 
@@ -97,7 +98,7 @@ public class MockWebServerDemoActivity extends ActionBarActivity {
             try {
                 startWebServer();
             } catch (Exception e) {
-                Log.d("MockWebServerDemo", "startWebServerException");
+                Log.d("MockWebServerDemo", "startWebServerException = " + e);
                 //throw new AssertionError(e);
             }
             return null;
